@@ -1,0 +1,40 @@
+{
+  "name": "warframe-equipment-overlay",
+  "version": "0.1.0",
+  "description": "Overlay in-game leger pour consulter les stats d'equipement Warframe (armes, warframes, mods) sans quitter le jeu.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build-data": "node scripts/build-data.js",
+    "dist": "electron-builder"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^44.2.0",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "@wfcd/items": "^1.1275.82",
+    "electron-store": "^8.2.0"
+  },
+  "build": {
+    "appId": "com.example.warframeoverlay",
+    "productName": "Warframe Equipment Overlay",
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "data/**/*"
+    ],
+    "win": {
+      "target": "portable"
+    },
+    "linux": {
+      "target": "AppImage"
+    },
+    "mac": {
+      "target": "dmg"
+    }
+  }
+}
