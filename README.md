@@ -1,88 +1,122 @@
 # Warframe Equipment Overlay
 
-Overlay in-game léger (Electron) pour consulter les stats des Warframes, armes et mods
-sans quitter le jeu — fenêtre transparente, toujours au-dessus, avec recherche et favoris.
+A lightweight, transparent in-game overlay built with Electron that lets you browse Warframe, weapon, companion, and mod information without leaving the game.
+
+Featuring a searchable equipment database, favorites, and global keyboard shortcuts, the overlay provides quick access to useful information while playing Warframe.
+
+## Features
+
+- **In-game overlay** — Transparent, borderless window that stays on top of other applications.
+- **Equipment database** — Browse Warframes, weapons, mods, companions, and other equipment.
+- **Search** — Quickly find items by name.
+- **Favorites** — Save frequently used items for easy access between sessions.
+- **Global keyboard shortcuts** — Control the overlay without leaving the game.
+- **Click-through mode** — Let mouse clicks pass through the overlay to interact with the game underneath.
+- **Lightweight interface** — Dark, semi-transparent UI designed to minimize distractions.
+
+## Requirements
+
+- [Node.js](https://nodejs.org/) and npm
+- Windows
+- An internet connection to download dependencies and load remote item images
 
 ## Installation
 
+Clone the repository and install the dependencies:
+
 ```bash
+git clone https://github.com/YOUR_USERNAME/warframe-overlay.git
+cd warframe-overlay
 npm install
+```
+
+Start the application:
+
+```bash
 npm start
 ```
 
-Ça suffit pour lancer l'overlay avec un petit jeu de données de démo (6 items dans
-`data/items.json`) — de quoi tester tout de suite l'UI, la recherche, les favoris, etc.
+The application includes a small demo dataset, allowing you to explore the interface, search functionality, and favorites without downloading the full equipment database.
 
-## Charger la base de données complète
+## Full Equipment Database
 
-Le projet de démo n'inclut que quelques items pour rester léger. Pour avoir **toute**
-la base Warframe (armes, warframes, mods, compagnons...), installe le package
-communautaire `warframe-items` (maintenu par WFCD, qui scrape la Public Export
-officielle de Digital Extremes) puis génère le fichier de données :
+The default dataset contains a limited selection of items for demonstration purposes.
+
+To load the full equipment database, install [`warframe-items`](https://www.npmjs.com/package/warframe-items), a community-maintained package that provides data derived from Warframe's official Public Export.
+
+Install the package and generate the database:
 
 ```bash
 npm install warframe-items
 npm run build-data
 ```
 
-Ça régénère `data/items.json` avec la base complète et à jour. Les images sont
-chargées directement depuis le CDN public `cdn.warframestat.us`, donc pas besoin
-de télécharger les assets toi-même.
+This generates `data/items.json` with the available equipment data provided by the package.
 
-⚠️ `warframe-items` est assez volumineux (il embarque beaucoup de métadonnées) —
-compte quelques dizaines de secondes pour l'install et la génération.
+Item images are loaded from the public [WarframeStat.us CDN](https://cdn.warframestat.us/), so image assets do not need to be stored locally.
 
-## Raccourcis clavier (globaux, marchent même quand le jeu a le focus)
+**Note:** Generating the full database may take some time, depending on your system and the package version.
 
-| Raccourci        | Action                                  |
-|-------------------|------------------------------------------|
-| `Ctrl+Shift+O`    | Afficher / masquer l'overlay             |
-| `Ctrl+Shift+L`    | Activer/désactiver le "click-through" (les clics traversent la fenêtre pour ne pas gêner le jeu) |
+## Keyboard Shortcuts
 
-Tu peux les changer dans `main.js` (`globalShortcut.register(...)`).
+The following global shortcuts work while another application, including Warframe, is focused.
 
-## Structure du projet
+| Shortcut | Action |
+|---|---|
+| `Ctrl + Shift + O` | Show or hide the overlay |
+| `Ctrl + Shift + L` | Toggle click-through mode |
 
-```
+These shortcuts can be customized in `main.js` using Electron's `globalShortcut` API.
+
+## Project Structure
+
+```text
 warframe-overlay/
-├── main.js            # Processus principal Electron : fenêtre, raccourcis, IPC
-├── preload.js         # Pont sécurisé entre main et renderer (contextBridge)
-├── src/
-│   ├── index.html     # Structure de l'UI
-│   ├── style.css       # Style sombre semi-transparent
-│   └── renderer.js     # Logique : recherche, filtres, favoris, détail item
-├── scripts/
-│   └── build-data.js   # Génère data/items.json depuis warframe-items
+├── main.js               # Electron main process and window management
+├── preload.js            # Secure bridge between the main and renderer processes
+├── package.json          # Project metadata, dependencies, and scripts
+├── package-lock.json     # Locked dependency versions
 ├── data/
-│   └── items.json      # Base de données locale (démo par défaut)
-└── package.json
+│   └── items.json        # Local equipment database
+├── scripts/
+│   └── build-data.js     # Equipment database generation script
+└── src/
+    ├── index.html        # Application interface
+    ├── renderer.js       # Search, filtering, favorites, and item details
+    └── style.css         # Overlay styling
 ```
 
-## Comment ça marche techniquement
+## Technical Overview
 
-- **Fenêtre overlay** : `BrowserWindow` transparente, sans bordure (`frame: false`),
-  toujours au-dessus (`alwaysOnTop`), visible sur tous les bureaux et par-dessus le
-  plein écran fenêtré (`setVisibleOnAllWorkspaces`). Fonctionne bien avec les jeux
-  qui tournent en mode "Fenêtré sans bordure" — le plein écran exclusif (DirectX)
-  peut bloquer l'affichage de tout overlay, c'est une limitation Windows, pas
-  spécifique à ce projet.
-- **Click-through** : `setIgnoreMouseEvents(true)` permet aux clics de traverser
-  la fenêtre vers le jeu en dessous, pour ne pas gêner le gameplay quand tu veux
-  juste garder l'info affichée à l'écran.
-- **Favoris** : stockés localement via `electron-store` (fichier JSON dans le
-  dossier de config utilisateur), persistent entre les sessions.
-- **Données** : chargées depuis `data/items.json` (généré par `warframe-items`,
-  qui lui-même s'appuie sur la Public Export officielle de Digital Extremes).
+### Overlay Window
 
-## Prochaines étapes possibles
+The application uses Electron's `BrowserWindow` to create a transparent, frameless window that stays above other windows.
 
-- Ajouter un vrai système de builds (combos de mods sauvegardés par arme/warframe)
-- Détection automatique de l'arme équipée en jeu (plus complexe, nécessiterait de
-  lire la mémoire du process ou un log du jeu — à étudier si tu veux aller plus loin)
-- Overlay "compact mode" (juste une barre de recherche minimisée)
-- Empaqueter en `.exe` portable avec `npm run dist` (electron-builder déjà configuré)
+It is designed to work best with Warframe running in **borderless windowed mode**. Exclusive fullscreen mode may prevent the overlay from appearing above the game, depending on the system and graphics configuration.
 
-## Licence
+### Click-Through Mode
 
-MIT — fais-en ce que tu veux. Les données Warframe restent la propriété de
-Digital Extremes ; ce projet n'est ni affilié ni approuvé par eux.
+Electron's `setIgnoreMouseEvents()` allows mouse events to pass through the overlay to the application underneath. This makes it possible to keep information visible without interfering with gameplay.
+
+### Favorites Storage
+
+Favorites are stored locally using `electron-store` and persist between application sessions.
+
+### Equipment Data
+
+Equipment information is loaded from `data/items.json`. The bundled demo dataset can be replaced with data generated through the `warframe-items` package.
+
+## Roadmap
+
+Potential future improvements include:
+
+- **Build management** — Create, save, and manage equipment builds with custom mod configurations.
+- **Compact mode** — Provide a minimized interface with a search bar and essential information.
+- **Equipment detection** — Investigate ways to identify the currently equipped weapon or Warframe using supported game data or log files, where available.
+- **Standalone executable** — Package the application as a portable Windows executable using `electron-builder`.
+
+## License
+
+This project is licensed under the MIT License. See the `LICENSE` file for details.
+
+Warframe and all related game assets are the property of Digital Extremes. This project is an independent community project and is not affiliated with, endorsed by, or sponsored by Digital Extremes.
